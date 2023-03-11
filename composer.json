@@ -1,0 +1,24 @@
+{
+    "name": "podcast-rss/podcast-rss",
+    "description": "Generate an RSS XML for a podcast",
+    "keywords": [
+        "php",
+        "podcast",
+        "rss",
+        "xml"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "PodcastRSS\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Christo Yovev",
+            "email": "yovev@xroads-bg.com"
+        }
+    ],
+    "require": {}
+}
