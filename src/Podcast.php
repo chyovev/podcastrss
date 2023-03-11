@@ -61,6 +61,14 @@ class Podcast
      */
     protected bool $isExplicit = false;
 
+    /**
+     * All of the podcast's episodes,
+     * at least one element is required.
+     * 
+     * @var Episode[]
+     */
+    protected array $episodes = [];
+
 
     ///////////////////////////////////////////////////////////////////////////
     public function getTitle(): ?string {
@@ -130,6 +138,21 @@ class Podcast
     ///////////////////////////////////////////////////////////////////////////
     public function setExplicit(bool $value): self {
         $this->isExplicit = $value;
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @return Episode[]
+     */
+    public function getEpisodes(): array {
+        return $this->episodes;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function addEpisode(Episode $episode): self {
+        $this->episodes[] = $episode;
 
         return $this;
     }
