@@ -16,6 +16,8 @@ class Podcast
      * One or more sentences describing the podcast, required.
      * Maximum amount of text allowed is 4000 bytes (~3600 chars).
      * Rich text formatting supported (<p>, <ol>, <ul>, <li>, <a>).
+     * Optional for Google, but still recommended.
+     * Required by Apple.
      * 
      * @var string
      */
@@ -68,6 +70,68 @@ class Podcast
      * @var Episode[]
      */
     protected array $episodes = [];
+
+    /**
+     * Website associated with the podcast
+     * (not the URL of the feed itself).
+     * Optional for Apple, but still recommended.
+     * Required by Google.
+     * 
+     * @var string
+     */
+    protected ?string $website = null;
+
+    /**
+     * Name of person or group responsible
+     * for creating the podcast.
+     * Similar to $owner, but visible.
+     * Not required, but recommended.
+     * 
+     * @var string
+     */
+    protected ?string $author = null;
+
+    /**
+     * Podcast owner contact information (email and name).
+     * Not publically displayed, but used for administrative
+     * communication (at least with Apple Podcasts).
+     * Not required, but recommended.
+     * It makes sense to extract both these properties into a
+     * single class, but this might overcomplicate things.
+     * See the setContact() method.
+     * 
+     * @var string
+     */
+    protected ?string $contactName  = null;
+    protected ?string $contactEmail = null;
+    
+    /**
+     * The show copyright details.
+     * Not required.
+     * 
+     * @var string
+     */
+    protected ?string $copyright = null;
+
+    /**
+     * Whether the podcast should be removed from
+     * the platforms, default value is false.
+     * Not required.
+     * 
+     * @var bool
+     */
+    protected bool $shouldBeRemoved = false;
+
+    /**
+     * When a podcast's feed gets moved to a new URL
+     * altogether, said address should be specified
+     * in this property.
+     * The old address should be redirected to it
+     * using a 301 (moved permanently) redirect.
+     * 
+     * @var string 
+     */
+    protected ?string $newFeedUrl = null;
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -154,6 +218,101 @@ class Podcast
     public function addEpisode(Episode $episode): self {
         $this->episodes[] = $episode;
 
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function getWebsite(): ?string {
+        return $this->website;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setWebsite(string $website): self {
+        $this->website = $website;
+        
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function getAuthor(): ?string {
+        return $this->author;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setAuthor(string $author): self {
+        $this->author = $author;
+        
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * A single method shortcut to set both contact properties.
+     */
+    public function setContact(string $name, string $email): self {
+        $this->setContactName($name);
+        $this->setContactEmail($email);
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function getContactName(): ?string {
+        return $this->contactName;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setContactName(string $contactName): self {
+        $this->contactName = $contactName;
+        
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function getContactEmail(): ?string {
+        return $this->contactEmail;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setContactEmail(string $contactEmail): self {
+        $this->contactEmail = $contactEmail;
+        
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function getCopyright(): ?string {
+        return $this->copyright;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setCopyright(string $copyright): self {
+        $this->copyright = $copyright;
+        
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function shouldBeRemoved(): bool {
+        return $this->shouldBeRemoved;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setShouldBeRemoved(bool $value): self {
+        $this->shouldBeRemoved = $value;
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function getNewFeedUrl(): ?string {
+        return $this->newFeedUrl;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setNewFeedUrl(string $newFeedUrl): self {
+        $this->newFeedUrl = $newFeedUrl;
+        
         return $this;
     }
 
