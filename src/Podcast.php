@@ -123,6 +123,20 @@ class Podcast
     protected bool $shouldBeRemoved = false;
 
     /**
+     * NB! Used by Apple Podcasts only.
+     * 
+     * When a podcast is marked as archived,
+     * no new episodes will ever be published.
+     * The podcast will remain visible, though.
+     * To hide it altogether, use the
+     * $shouldBeRemoved property.
+     * Default value for $isArchived is false.
+     * 
+     * @var bool
+     */
+    protected bool $isArchived = false;
+
+    /**
      * When a podcast's feed gets moved to a new URL
      * altogether, said address should be specified
      * in this property.
@@ -133,6 +147,67 @@ class Podcast
      */
     protected ?string $newFeedUrl = null;
 
+    /**
+     * NB! Used by Apple Podcasts only.
+     * 
+     * There are two types of podcasts: Episodic and Serial.
+     * The property gets populated using the respective
+     * factory methods.
+     * 
+     * @see self :: newEpisodic()
+     * @see self :: newSerial()
+     * @var string
+     */
+    protected ?string $type = null;
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Episodic podcasts are intended to be consumed without any
+     * specific order. Apple Podcasts will present newest episodes
+     * first and display the publish date (required) of each episode.
+     * If organized into seasons, the newest season will be presented
+     * first – otherwise, episodes will be grouped by year published,
+     * newest first.
+     */
+    public static function newEpisodic() {
+        return new self('Episodic');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Serial podcasts are intended to be consumed in sequential order.
+     * Apple Podcasts will present the oldest episodes first and display
+     * the episode numbers (required) of each episode.
+     * If organized into seasons, the newest season will be presented first
+     * and $episodeNumber must be given for each episode.
+     */
+    public static function newSerial() {
+        return new self('Serial');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Since the constructor's visibility is set to protected,
+     * a Podcast object can only be initialized using one of
+     * the two factory methods calling the constructor.
+     * Alternatively, potential extensions of the Podcast class
+     * can bypass this behavior by declaring a public constructor.
+     * 
+     * @param string $type – type of podcast
+     */
+    protected function __construct(string $type) {
+        $this->type = $type;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Setter is in the constructor as the property
+     * accepts only specific values.
+     */
+    public function getType(): ?string {
+        return $this->type;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     public function getTitle(): ?string {
@@ -300,6 +375,18 @@ class Podcast
     ///////////////////////////////////////////////////////////////////////////
     public function setShouldBeRemoved(bool $value): self {
         $this->shouldBeRemoved = $value;
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function isArchived(): bool {
+        return $this->isArchived;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setArchived(bool $value): self {
+        $this->isArchived = $value;
 
         return $this;
     }

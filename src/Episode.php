@@ -11,6 +11,10 @@ class Episode
 
     /**
      * Title of the episode, required.
+     * The episode number and/or season should NOT be
+     * included in the title; instead, the respective
+     * properties should be used: $episodeNumber and
+     * $seasonNumber.
      * 
      * @var string
      */
@@ -124,6 +128,94 @@ class Episode
      */
     protected bool $shouldBeRemoved = false;
 
+    /**
+     * NB! Used by Apple Podcasts only.
+     * 
+     * Episode numbers are optional for Episodic podcasts,
+     * but are mandatory for Serial podcasts.
+     * Value should be a non-zero integer.
+     * 
+     * @var int
+     */
+    protected ?int $episodeNumber = null;
+
+    /**
+     * NB! Used by Apple Podcasts only.
+     * 
+     * The episode season number (if applicable).
+     * Value should be a non-zero integer.
+     * If there's only one season, the season
+     * number will remain hidden.
+     * 
+     * @var int
+     */
+    protected ?int $seasonNumber = null;
+
+    /**
+     * NB! Used by Apple Podcasts only.
+     * 
+     * There are three types of episodes:
+     * Full, Trailer and Bonus.
+     * The property gets populated using
+     * the respective factory methods.
+     * 
+     * @see self :: newFull()
+     * @see self :: newTrailer()
+     * @see self :: newBonus()
+     * 
+     * @var string
+     */
+    protected ?string $type = null;
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Initialize a regular (full) episode. This is the most common type.
+     */
+    public static function newFull() {
+        return new self('Full');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Trailer type should be used for short, promotional pieces
+     * of content that represent a preview of the podcast. 
+     */
+    public static function newTrailer() {
+        return new self('Trailer');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Extra content (such as behind the scenes or promotional
+     * content for another show) should be marked as Bonus type.
+     */
+    public static function newBonus() {
+        return new self('Bonus');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Since the constructor's visibility is set to protected,
+     * an Episode object can only be initialized using one of
+     * the three factory methods calling the constructor.
+     * Alternatively, potential extensions of the Episode class
+     * can bypass this behavior by declaring a public constructor.
+     * 
+     * @param string $type – type of episode
+     */
+    protected function __construct(string $type) {
+        $this->type = $type;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Setter is in the constructor as the property
+     * accepts only specific values.
+     */
+    public function getType(): ?string {
+        return $this->type;
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     public function getTitle(): ?string {
@@ -275,6 +367,30 @@ class Episode
     ///////////////////////////////////////////////////////////////////////////
     public function setShouldBeRemoved(bool $value): self {
         $this->shouldBeRemoved = $value;
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function getEpisodeNumber(): ?int {
+        return $this->episodeNumber;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setEpisodeNumber(int $episodeNumber): self {
+        $this->episodeNumber = $episodeNumber;
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function getSeasonNumber(): ?int {
+        return $this->seasonNumber;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setSeasonNumber(int $seasonNumber): self {
+        $this->seasonNumber = $seasonNumber;
 
         return $this;
     }
