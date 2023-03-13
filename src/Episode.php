@@ -353,6 +353,11 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    public function markAsExplicit(): self {
+        return $this->setExplicit(true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     public function setExplicit(bool $value): self {
         $this->isExplicit = $value;
 
@@ -362,6 +367,15 @@ class Episode
     ///////////////////////////////////////////////////////////////////////////
     public function shouldBeRemoved(): bool {
         return $this->shouldBeRemoved;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Keep in mind that it may take some time for an episode marked
+     * for removal to actually be removed from the platforms it is on.
+     */
+    public function markForRemoval(): self {
+        return $this->setShouldBeRemoved(true);
     }
 
     ///////////////////////////////////////////////////////////////////////////

@@ -275,6 +275,11 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    public function markAsExplicit(): self {
+        return $this->setExplicit(true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     public function setExplicit(bool $value): self {
         $this->isExplicit = $value;
 
@@ -373,6 +378,15 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Keep in mind that it may take some time for a podcast marked
+     * for removal to actually be removed from the platforms it is on.
+     */
+    public function markForRemoval(): self {
+        return $this->setShouldBeRemoved(true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     public function setShouldBeRemoved(bool $value): self {
         $this->shouldBeRemoved = $value;
 
@@ -382,6 +396,11 @@ class Podcast
     ///////////////////////////////////////////////////////////////////////////
     public function isArchived(): bool {
         return $this->isArchived;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function markAsArchived(): self {
+        return $this->setArchived(true);
     }
 
     ///////////////////////////////////////////////////////////////////////////
