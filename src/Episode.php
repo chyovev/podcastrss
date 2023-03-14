@@ -4,8 +4,11 @@ namespace PodcastRSS;
 
 use DateTime;
 use Exception;
+use InvalidArgumentException;
 use TypeError;
 use PodcastRSS\Enum\EpisodeType;
+use PodcastRSS\Enum\ExtensionType;
+use PodcastRSS\Enum\MimeType;
 use PodcastRSS\Traits\Validation;
 
 class Episode
@@ -33,29 +36,16 @@ class Episode
     
     /**
      * MIME type of the episode's file.
-     * Supported file formats are:
-     *     - audio/x-m4a
-     *     - audio/mpeg
-     *     - video/quicktime
-     *     - video/mp4
-     *     - video/x-m4v
-     *     - application/pdf
      * 
+     * @see \PodcastRSS\Enum\MimeType – all supported mime types
      * @var string
      */
     protected ?string $mimeType = null;
 
     /**
      * Url of the episode, required.
-     * Supported file formats correspond with
-     * the MIME type:
-     *     - m4a
-     *     - mp3
-     *     - mov
-     *     - mp4
-     *     - m4v
-     *     - pdf
      * 
+     * @see \PodcastRSS\Enum\ExtensionType – all supported file extensions
      * @var string
      */
     protected ?string $episodeUrl = null;
@@ -218,6 +208,9 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setType(string $type): self {
         $this->validateIsOneOf($type, EpisodeType::getValidValues());
         
@@ -244,7 +237,12 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setFileSize(int $fileSize): self {
+        $this->validateIsPositive($fileSize);
+        
         $this->fileSize = $fileSize;
 
         return $this;
@@ -256,10 +254,70 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setMimeType(string $mimeType): self {
+        $this->validateIsOneOf($mimeType, MimeType::getValidValues());
+
         $this->mimeType = $mimeType;
 
+        // once the MIME type gets set, validate it
+        // against the episode URL in case it's also set
+        $this->validateMimeTypeAgainstEpisodeUrl();
+
         return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Once the MIME type and the episode URL are both set,
+     * validate them against each other.
+     * This method is invoked by the setters of both properties.
+     * 
+     * @throws InvalidArgumentException – URL vs. MIME type mismatch
+     * @return void
+     */
+    protected function validateMimeTypeAgainstEpisodeUrl(): void {
+        $episodeUrl = $this->getEpisodeUrl();
+        $mimeType   = $this->getMimeType();
+
+        // if one of the properties is still not set, abort validation
+        if (is_null($episodeUrl) || is_null($mimeType)) {
+            return;
+        }
+
+        $extension = $this->getEpisodeUrlExtension($episodeUrl);
+
+        $this->validateMimeTypeAndUrlExtensionCorrespondence($mimeType, $extension);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * There's a total of 6 MIME types supported which correspond
+     * to 6 file extensions (the extension gets extracted from the
+     * episode URL). If the two do not match, an exception gets thrown.
+     * 
+     * @throws InvalidArgumentException – URL extension does not match MIME type
+     * @param  string $mimeType
+     * @param  string $extension
+     * @return void
+     */
+    protected function validateMimeTypeAndUrlExtensionCorrespondence(string $mimeType, string $extension): void {
+        $mapping = [
+            ExtensionType::M4A => MimeType::AUDIO_X_M4A,
+            ExtensionType::MP3 => MimeType::AUDIO_MPEG,
+            ExtensionType::MOV => MimeType::VIDEO_QUICKTIME,
+            ExtensionType::MP4 => MimeType::VIDEO_MP4,
+            ExtensionType::M4V => MimeType::VIDEO_X_M4V,
+            ExtensionType::PDF => MimeType::APPLICATION_PDF,
+        ];
+
+        $expectedMimeType = $mapping[$extension];
+
+        if ($expectedMimeType !== $mimeType) {
+            throw new InvalidArgumentException("Episode URL extension '{$extension}' does not correspond with MIME type {$mimeType}; expected {$expectedMimeType} instead");
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -268,10 +326,41 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setEpisodeUrl(string $episodeUrl): self {
+        $this->validateUrl($episodeUrl);
+        $this->validateEpisodeUrlExtension($episodeUrl);
+
         $this->episodeUrl = $episodeUrl;
 
+        // once the episode URL gets set, validate it
+        // against the episode MIME type in case it's also set
+        $this->validateMimeTypeAgainstEpisodeUrl();
+
         return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Make sure the extension used in the episode URL is a valid one.
+     * 
+     * @throws InvalidArgumentException – invalid extension
+     * @param  string $episodeUrl
+     * @return void
+     */
+    protected function validateEpisodeUrlExtension(string $episodeUrl): void {
+        $extension = $this->getEpisodeUrlExtension($episodeUrl);
+
+        $this->validateIsOneOf($extension, ExtensionType::getValidValues());
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function getEpisodeUrlExtension(string $episodeUrl): string {
+        $extension = pathinfo($episodeUrl, PATHINFO_EXTENSION);
+
+        return mb_strtolower($extension, 'utf-8');
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -315,6 +404,8 @@ class Episode
 
     ///////////////////////////////////////////////////////////////////////////
     public function setDescription(string $description): self {
+        $this->validateMaxLengthHTML($description, 3600);
+
         $this->description = $description;
 
         return $this;
@@ -326,7 +417,12 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setDuration(int $duration): self {
+        $this->validateIsPositive($duration);
+
         $this->duration = $duration;
 
         return $this;
@@ -338,7 +434,12 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setWebsite(string $website): self {
+        $this->validateUrl($website);
+
         $this->website = $website;
         
         return $this;
@@ -350,7 +451,12 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setImageUrl(string $imageUrl): self {
+        $this->validateUrl($imageUrl);
+
         $this->imageUrl = $imageUrl;
 
         return $this;
@@ -400,7 +506,12 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setEpisodeNumber(int $episodeNumber): self {
+        $this->validateIsPositive($episodeNumber);
+
         $this->episodeNumber = $episodeNumber;
 
         return $this;
@@ -412,7 +523,12 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setSeasonNumber(int $seasonNumber): self {
+        $this->validateIsPositive($seasonNumber);
+
         $this->seasonNumber = $seasonNumber;
 
         return $this;

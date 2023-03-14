@@ -2,6 +2,7 @@
 
 namespace PodcastRSS;
 
+use InvalidArgumentException;
 use PodcastRSS\Enum\PodcastType;
 use PodcastRSS\Traits\Validation;
 
@@ -211,12 +212,28 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setType(string $type): self {
         $this->validateIsOneOf($type, PodcastType::getValidValues());
         
         $this->type = $type;
 
         return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Check whether the podcast's type is 'Serial'.
+     * The method is used for the validation of new episodes
+     * being added to the set.
+     * 
+     * @see self :: validateNewEpisode()
+     * @return bool
+     */
+    public function isTypeSerial(): bool {
+        return $this->type === PodcastType::SERIAL;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -238,6 +255,8 @@ class Podcast
 
     ///////////////////////////////////////////////////////////////////////////
     public function setDescription(string $description): self {
+        $this->validateMaxLengthHTML($description, 3600);
+
         $this->description = $description;
 
         return $this;
@@ -249,7 +268,12 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setImageUrl(string $imageUrl): self {
+        $this->validateUrl($imageUrl);
+        
         $this->imageUrl = $imageUrl;
 
         return $this;
@@ -261,10 +285,32 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – invalid value
+     */
     public function setLanguage(string $language): self {
+        $this->validateLanguage($language);
+
         $this->language = $language;
 
         return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Having an enum type class with all available languages would
+     * be tedious, so a regex validation will be used instead.
+     * The language should be ISO 639-1 compatible, i.e. two lowercase
+     * letters, potentially followed by a dash and two uppercase letters.
+     * 
+     * @throws InvalidArgumentException – invalid value
+     */
+    protected function validateLanguage(string $language): void {
+        $pattern = '/^[a-z]{2}(-[A-Z]{2})?$/';
+
+        if ( ! preg_match($pattern, $language)) {
+            throw new InvalidArgumentException("The provided language '{$language}' is not ISO 639-1 compatible");
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -305,10 +351,107 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * A mass setter for all episodes at once.
+     * 
+     * @param Episode[] $episodes
+     */
+    public function setEpisodes(array $episodes): self {
+        $this->episodes = [];
+
+        foreach ($episodes as $item) {
+            $this->addEpisode($item);
+        }
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function addEpisode(Episode $episode): self {
+        $this->validateNewEpisode($episode);
+
         $this->episodes[] = $episode;
 
         return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Each episode being added to the set must undergo
+     * a proper validation first.
+     * 
+     * @throws InvalidArgumentException – failed validation
+     * @param  Episode $episode – episode being added to set
+     * @return void
+     */
+    protected function validateNewEpisode(Episode $episode): void {
+        if ($this->isTypeSerial()) {
+            $this->validateEpisodeHasNumber($episode);
+        }
+
+        $this->validateEpisodeNumberIsUnique($episode);
+        $this->validateEpisodeGuidIsUnique($episode);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * All episodes of a Serial podcast should have an episode number.
+     * 
+     * @throws InvalidArgumentException – missing episode number
+     * @param  Episode $episode – episode being added to set
+     * @return void
+     */
+    protected function validateEpisodeHasNumber(Episode $episode): void {
+        if ( ! $episode->getEpisodeNumber()) {
+            throw new InvalidArgumentException("Required episode number is missing");
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Make sure the episode number of the episode being added to
+     * the set is not used by another episode already in the set.
+     * 
+     * @throws InvalidArgumentException – episode number conflict
+     * @param  Episode $episode – episode being added to set
+     * @return void
+     */
+    protected function validateEpisodeNumberIsUnique(Episode $episode): void {
+        $newNumber = $episode->getEpisodeNumber();
+
+        foreach ($this->episodes as $item) {
+            $number = $item->getEpisodeNumber();
+
+            // since episode numbers are optional, make sure
+            // there is a value before checking it for uniqueness
+            if ($number && $newNumber === $number) {
+                throw new InvalidArgumentException("Cannot add episode as the episode number '{$newNumber}' is already being used");
+            }
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Make sure the guid of the episode being added to the
+     * set is not used by another episode already in the set.
+     * 
+     * @throws InvalidArgumentException – guid conflict
+     * @param  Episode $episode – episode being added to set
+     * @return void
+     */
+    protected function validateEpisodeGuidIsUnique(Episode $episode): void {
+        $newGuid = $episode->getGuid();
+
+        foreach ($this->episodes as $item) {
+            $guid = $item->getGuid();
+
+            if ($newGuid === $guid) {
+                throw new InvalidArgumentException("Cannot add episode as the guid '{$newGuid}' is already being used");
+            }
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -317,7 +460,12 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setWebsite(string $website): self {
+        $this->validateUrl($website);
+
         $this->website = $website;
         
         return $this;
@@ -364,7 +512,12 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setContactEmail(string $contactEmail): self {
+        $this->validateEmail($contactEmail);
+
         $this->contactEmail = $contactEmail;
         
         return $this;
@@ -426,7 +579,12 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * @throws InvalidArgumentException – failed validation
+     */
     public function setNewFeedUrl(string $newFeedUrl): self {
+        $this->validateUrl($newFeedUrl);
+
         $this->newFeedUrl = $newFeedUrl;
         
         return $this;
