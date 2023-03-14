@@ -5,9 +5,13 @@ namespace PodcastRSS;
 use DateTime;
 use Exception;
 use TypeError;
+use PodcastRSS\Enum\EpisodeType;
+use PodcastRSS\Traits\Validation;
 
 class Episode
 {
+
+    use Validation;
 
     /**
      * Title of the episode, required.
@@ -173,7 +177,7 @@ class Episode
      * Initialize a regular (full) episode. This is the most common type.
      */
     public static function newFull() {
-        return new self('Full');
+        return new self(EpisodeType::FULL);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -182,7 +186,7 @@ class Episode
      * of content that represent a preview of the podcast. 
      */
     public static function newTrailer() {
-        return new self('Trailer');
+        return new self(EpisodeType::TRAILER);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -191,7 +195,7 @@ class Episode
      * content for another show) should be marked as Bonus type.
      */
     public static function newBonus() {
-        return new self('Bonus');
+        return new self(EpisodeType::BONUS);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -205,16 +209,21 @@ class Episode
      * @param string $type – type of episode
      */
     protected function __construct(string $type) {
-        $this->type = $type;
+        $this->setType($type);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    /**
-     * Setter is in the constructor as the property
-     * accepts only specific values.
-     */
     public function getType(): ?string {
         return $this->type;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setType(string $type): self {
+        $this->validateIsOneOf($type, EpisodeType::getValidValues());
+        
+        $this->type = $type;
+
+        return $this;
     }
 
     ///////////////////////////////////////////////////////////////////////////

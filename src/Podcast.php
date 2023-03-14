@@ -2,8 +2,13 @@
 
 namespace PodcastRSS;
 
+use PodcastRSS\Enum\PodcastType;
+use PodcastRSS\Traits\Validation;
+
 class Podcast
 {
+
+    use Validation;
 
     /**
      * The podcast title, required.
@@ -171,7 +176,7 @@ class Podcast
      * newest first.
      */
     public static function newEpisodic() {
-        return new self('Episodic');
+        return new self(PodcastType::EPISODIC);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -183,7 +188,7 @@ class Podcast
      * and $episodeNumber must be given for each episode.
      */
     public static function newSerial() {
-        return new self('Serial');
+        return new self(PodcastType::SERIAL);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -197,16 +202,21 @@ class Podcast
      * @param string $type – type of podcast
      */
     protected function __construct(string $type) {
-        $this->type = $type;
+        $this->setType($type);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    /**
-     * Setter is in the constructor as the property
-     * accepts only specific values.
-     */
     public function getType(): ?string {
         return $this->type;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setType(string $type): self {
+        $this->validateIsOneOf($type, PodcastType::getValidValues());
+        
+        $this->type = $type;
+
+        return $this;
     }
 
     ///////////////////////////////////////////////////////////////////////////
