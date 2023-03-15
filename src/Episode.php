@@ -226,6 +226,8 @@ class Episode
 
     ///////////////////////////////////////////////////////////////////////////
     public function setTitle(string $title): self {
+        $this->validateMaxLength($title);
+        
         $this->title = $title;
 
         return $this;
@@ -370,6 +372,8 @@ class Episode
 
     ///////////////////////////////////////////////////////////////////////////
     public function setGuid(string $guid): self {
+        $this->validateMaxLength($guid);
+
         $this->guid = $guid;
 
         return $this;
@@ -404,7 +408,7 @@ class Episode
 
     ///////////////////////////////////////////////////////////////////////////
     public function setDescription(string $description): self {
-        $this->validateMaxLengthHTML($description, 3600);
+        $this->validateMaxLengthHTML($description);
 
         $this->description = $description;
 

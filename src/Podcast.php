@@ -243,6 +243,8 @@ class Podcast
 
     ///////////////////////////////////////////////////////////////////////////
     public function setTitle(string $title): self {
+        $this->validateMaxLength($title);
+
         $this->title = $title;
 
         return $this;
@@ -255,7 +257,7 @@ class Podcast
 
     ///////////////////////////////////////////////////////////////////////////
     public function setDescription(string $description): self {
-        $this->validateMaxLengthHTML($description, 3600);
+        $this->validateMaxLengthHTML($description);
 
         $this->description = $description;
 
@@ -478,6 +480,8 @@ class Podcast
 
     ///////////////////////////////////////////////////////////////////////////
     public function setAuthor(string $author): self {
+        $this->validateMaxLength($author);
+
         $this->author = $author;
         
         return $this;
@@ -501,6 +505,8 @@ class Podcast
 
     ///////////////////////////////////////////////////////////////////////////
     public function setContactName(string $contactName): self {
+        $this->validateMaxLength($contactName);
+
         $this->contactName = $contactName;
         
         return $this;
@@ -517,6 +523,7 @@ class Podcast
      */
     public function setContactEmail(string $contactEmail): self {
         $this->validateEmail($contactEmail);
+        $this->validateMaxLength($contactEmail);
 
         $this->contactEmail = $contactEmail;
         
@@ -530,6 +537,8 @@ class Podcast
 
     ///////////////////////////////////////////////////////////////////////////
     public function setCopyright(string $copyright): self {
+        $this->validateMaxLength($copyright);
+
         $this->copyright = $copyright;
         
         return $this;

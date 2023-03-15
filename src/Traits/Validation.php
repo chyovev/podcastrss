@@ -36,15 +36,29 @@ trait Validation
      * 
      * @throws InvalidArgumentException – HTML string too long
      * @param  string $html
-     * @param  int $maxLength
+     * @param  int $maxLength (3600 characters default)
      * @return void
      */
-    protected function validateMaxLengthHTML(string $html, int $maxLength): void {
-        $string = trim(strip_tags($html));
-        $length = mb_strlen($string, 'utf-8');
+    protected function validateMaxLengthHTML(string $html, int $maxLength = 3600): void {
+        $string = strip_tags($html);
+        
+        $this->validateMaxLength($string, $maxLength);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Make sure the passed string does not surpass the maximum length.
+     * 
+     * @throws InvalidArgumentException – string too long
+     * @param  string $string
+     * @param  int $maxLength (255 characters default)
+     * @return void
+     */
+    protected function validateMaxLength(string $string, int $maxLength = 255): void {
+        $length = mb_strlen(trim($string), 'utf-8');
 
         if ($length > $maxLength) {
-            throw new InvalidArgumentException("Passed HTML string surpasses the maximum length of {$maxLength} characters.");
+            throw new InvalidArgumentException("Passed string surpasses the maximum length of {$maxLength} characters.");
         }
     }
 
