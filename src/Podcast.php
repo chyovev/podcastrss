@@ -5,8 +5,10 @@ namespace PodcastRSS;
 use InvalidArgumentException;
 use PodcastRSS\Enum\PodcastType;
 use PodcastRSS\Traits\Validation;
+use Sabre\Xml\Service;
+use Sabre\Xml\Writer;
 
-class Podcast
+class Podcast extends AbstractParent
 {
 
     use Validation;
@@ -345,6 +347,11 @@ class Podcast
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    public function getExplicitValue(): string {
+        return var_export($this->isExplicit(), true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     /**
      * @return Episode[]
      */
@@ -597,6 +604,175 @@ class Podcast
         $this->newFeedUrl = $newFeedUrl;
         
         return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Generate an RSS XML using Sabre's XML library.
+     * 
+     * @return string
+     */
+    public function generateRss(): string {
+        $service = new Service();
+
+        $service->namespaceMap = [
+            'http://www.itunes.com/dtds/podcast-1.0.dtd' => 'itunes',
+            'http://purl.org/rss/1.0/modules/content/'   => 'content',
+        ];
+
+        // to add an attribute to the root element, a callback
+        // function should be used for the service $value attribute
+        return $service->write('rss', function(Writer $writer) {
+            $writer->writeAttribute('version','2.0');
+            $writer->write(['channel' => $this]);
+        });
+    }
+
+
+    /* ===================================================================== */
+    /*                       XML SERIALIZATION METHODS                       */
+    /* ===================================================================== */
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Serialize a Podcast object to an RSS XML string.
+     */
+    protected function convertToXml(): void {
+        $this->serializeTitle();
+        $this->serializeWebsite();
+        $this->setializeLanguage();
+        $this->serializeAuthor();
+        $this->serializeCopyright();
+        $this->serializeDescription();
+        $this->serializeType();
+        $this->serializeContact();
+        $this->serializeImageUrl();
+        $this->serializeCategories();
+        $this->serializeExplicit();
+        $this->serializeNewFeedUrl();
+        $this->serializeShouldBeRemoved();
+        $this->serializeArchived();
+        $this->serializeEpisodes();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeTitle(): void {
+        $this->writeToXml('title', $this->title);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeWebsite(): void {
+        $this->writeToXml('link', $this->website);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function setializeLanguage(): void {
+        $this->writeToXml('language', $this->language);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeAuthor(): void {
+        $this->writeToXml('itunes:author', $this->author);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeCopyright(): void {
+        $this->writeToXml('copyright', $this->copyright);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeDescription(): void {
+        $this->writeToXml('description', $this->description);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeType(): void {
+        $this->writeToXml('itunes:type', $this->type);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeContact(): void {
+        $data = [
+            'itunes:name'  => $this->contactName,
+            'itunes:email' => $this->contactEmail,
+        ];
+
+        $this->writeToXml('itunes:owner', $data);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeImageUrl(): void {
+        $this->writeToXml('itunes:image', $this->imageUrl);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeCategories(): void {
+        $data = [];
+
+        foreach ($this->categories as $mainCategory => $subcategories) {
+            $data[] = $this->getCategorySerializationData($mainCategory, $subcategories);
+        }
+
+        $this->xmlWriter->write($data);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Serialized subcategories are subelements of serialized
+     * main categories, but they have the same structure:
+     * 
+     *     <category text="(sub)category" />
+     * 
+     * Therefore, the subcategories serialization is carried
+     * out by simply calling this same method recursively.
+     * @param array  $subcategories
+     */
+    protected function getCategorySerializationData(string $mainCategory, array $subcategories = []): array {
+        $data = [
+            'name'       => 'category',
+            'attributes' => ['text' => trim($mainCategory)],
+        ];
+
+        foreach ($subcategories as $item) {
+            $data['value'][] = $this->getCategorySerializationData($item);
+        }
+
+        return $data;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeExplicit(): void {
+        $data = $this->getExplicitValue();
+
+        $this->writeToXml('itunes:explicit', $data);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeNewFeedUrl(): void {
+        $this->writeToXml('itunes:new-feed-url', $this->newFeedUrl);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeShouldBeRemoved(): void {
+        $this->writeToXml('itunes:block', 'Yes');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeArchived(): void {
+        $this->writeToXml('itunes:complete', 'Yes');
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * The episode array consists of Episode objects
+     * which also implement the xmlSerialize() method,
+     * so the value for Item will have the Episode's
+     * serialized content.
+     */
+    protected function serializeEpisodes(): void {
+        foreach ($this->episodes as $episode) {
+            $this->writeToXml('Item', $episode);
+        }
     }
 
 }

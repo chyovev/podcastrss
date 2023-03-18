@@ -11,7 +11,7 @@ use PodcastRSS\Enum\ExtensionType;
 use PodcastRSS\Enum\MimeType;
 use PodcastRSS\Traits\Validation;
 
-class Episode
+class Episode extends AbstractParent
 {
 
     use Validation;
@@ -467,8 +467,26 @@ class Episode
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Get the boolean isExplicit() value as a string ('true' or 'false'),
+     * used for the XML serialization.
+     * 
+     * @return string
+     */
+    public function getExplicitValue(): string {
+        return var_export($this->isExplicit(), true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * The $isExplicit property is optional for episodes
+     * which is why it's initial value is null.
+     * However, the return value is expected to be boolean
+     * which is incompatible with null values, hence the
+     * seemingly redundant comparison to true.
+     */
     public function isExplicit(): bool {
-        return $this->isExplicit;
+        return $this->isExplicit === true;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -537,4 +555,117 @@ class Episode
 
         return $this;
     }
+
+
+    /* ===================================================================== */
+    /*                       XML SERIALIZATION METHODS                       */
+    /* ===================================================================== */
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Serialize an Episode object to an RSS XML string.
+     */
+    protected function convertToXml(): void {
+        $this->serializeTitle();
+        $this->serializeDescription();
+        $this->serializeFile();
+        $this->serializeGuid();
+        $this->serializePubDate();
+        $this->serializeDuration();
+        $this->serializeWebsite();
+        $this->serializeImageUrl();
+        $this->serializeExplicit();
+        $this->serializeEpisodeNumber();
+        $this->serializeSeasonNumber();
+        $this->serializeEpisodeType();
+        $this->serializeShouldBeRemoved();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeTitle(): void {
+        $this->writeToXml('title', $this->title);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeDescription(): void {
+        $this->writeToXml('description', $this->description);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * The file element is a combination of 3 properties:
+     *     - file size (in bytes)
+     *     - MIME type
+     *     - episode public URL
+     */
+    protected function serializeFile(): void {
+        $attributes = [
+            'length' => $this->getFileSize(),
+            'type'   => $this->getMimeType(),
+            'url'    => $this->getEpisodeUrl(),
+        ];
+
+        $this->writeToXml('enclosure', NULL, $attributes);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeGuid(): void {
+        $this->writeToXml('guid', $this->guid);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializePubDate(): void {
+        $date = $this->getPubDate();
+
+        if ($date) {
+            $this->writeToXml('pubDate', $date->format('r'));
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeDuration(): void {
+        $this->writeToXml('duration', $this->duration);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeWebsite(): void {
+        $this->writeToXml('link', $this->website);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeImageUrl(): void {
+        $this->writeToXml('itunes:image', $this->imageUrl);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeExplicit(): void {
+        if ($this->isExplicit()) {
+            $value = $this->getExplicitValue();
+
+            $this->writeToXml('itunes:explicit', $value);
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeEpisodeNumber(): void {
+        $this->writeToXml('itunes:episode', $this->episodeNumber);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeSeasonNumber(): void {
+        $this->writeToXml('itunes:season', $this->seasonNumber);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeEpisodeType(): void {
+        $this->writeToXml('itunes:episodeType', $this->type);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    protected function serializeShouldBeRemoved(): void {
+        if ($this->shouldBeRemoved()) {
+            $this->writeToXml('itunes:block', 'Yes');
+        }
+    }
+
 }

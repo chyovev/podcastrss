@@ -20,5 +20,7 @@
             "email": "yovev@xroads-bg.com"
         }
     ],
-    "require": {}
+    "require": {
+        "sabre/xml": "^4.0"
+    }
 }
