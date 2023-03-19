@@ -697,37 +697,48 @@ class Episode extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeImageUrl(): void {
-        $this->writeToXml('itunes:image', $this->imageUrl);
+        $tagName = $this->getItunesElementName('image');
+        
+        $this->writeToXml($tagName, $this->imageUrl);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeExplicit(): void {
         if ($this->isExplicit()) {
-            $value = $this->getExplicitValue();
+            $tagName = $this->getItunesElementName('explicit');
+            $data    = $this->getExplicitValue();
 
-            $this->writeToXml('itunes:explicit', $value);
+            $this->writeToXml($tagName, $data);
         }
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeEpisodeNumber(): void {
-        $this->writeToXml('itunes:episode', $this->episodeNumber);
+        $tagName = $this->getItunesElementName('episode');
+
+        $this->writeToXml($tagName, $this->episodeNumber);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeSeasonNumber(): void {
-        $this->writeToXml('itunes:season', $this->seasonNumber);
+        $tagName = $this->getItunesElementName('season');
+
+        $this->writeToXml($tagName, $this->seasonNumber);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeEpisodeType(): void {
-        $this->writeToXml('itunes:episodeType', $this->type);
+        $tagName = $this->getItunesElementName('episodeType');
+
+        $this->writeToXml($tagName, $this->type);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeShouldBeRemoved(): void {
         if ($this->shouldBeRemoved()) {
-            $this->writeToXml('itunes:block', 'Yes');
+            $tagName = $this->getItunesElementName('block');
+
+            $this->writeToXml($tagName, 'Yes');
         }
     }
 

@@ -13,6 +13,18 @@ abstract class AbstractParent implements XmlSerializable {
     use Validation;
 
     /**
+     * All namespaces utilized in the serialized XML.
+     * Apart from being used in the namespace map
+     * delacaration, they're also required for the
+     * so called Clark-notation.
+     * 
+     * @see https://sabre.io/xml/clark-notation/
+     * @var string
+     */
+    const ITUNES_NS  = 'http://www.itunes.com/dtds/podcast-1.0.dtd',
+          CONTENT_NS = 'http://purl.org/rss/1.0/modules/content/';
+
+    /**
      * Instead of passing around the writer each time
      * a property needs to be serialized, the xmlSerialize()
      * method sets it as a property.
@@ -149,6 +161,38 @@ abstract class AbstractParent implements XmlSerializable {
                 }
             }
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Add the itunes namespace as a prefix in front of the element name.
+     * 
+     * @param  string $localName
+     * @return string
+     */
+    protected function getItunesElementName(string $localName): string {
+        return $this->getElementNameForNamespace($localName, self::ITUNES_NS);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Some XML elements are specific to a certain namespace and should
+     * have that namespace as a prefix, e.g. <itunes:block>.
+     * Although possible to simply provide it as a concatenated string,
+     * Sabre's advise is to use the namespace's URL as a prefix surrounded
+     * by curly brackets, and the library will take care of the mapping
+     * (granted a namespace mapping is provided for the Service object).
+     * 
+     * @see https://sabre.io/xml/clark-notation/
+     * @param string $localName
+     * @param string $namespace
+     * @return string
+     */
+    protected function getElementNameForNamespace(string $localName, string $namespace): string {
+        // surround namespace by curly brackets
+        $namespace = '{' . trim($namespace, '{}') . '}';
+
+        return "{$namespace}{$localName}";
     }
 
 }

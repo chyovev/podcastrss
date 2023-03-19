@@ -660,8 +660,8 @@ class Podcast extends AbstractParent
         $service = new Service();
 
         $service->namespaceMap = [
-            'http://www.itunes.com/dtds/podcast-1.0.dtd' => 'itunes',
-            'http://purl.org/rss/1.0/modules/content/'   => 'content',
+            self::ITUNES_NS  => 'itunes',
+            self::CONTENT_NS => 'content',
         ];
 
         // to add an attribute to the root element, a callback
@@ -733,7 +733,9 @@ class Podcast extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeAuthor(): void {
-        $this->writeToXml('itunes:author', $this->author);
+        $tagName = $this->getItunesElementName('author');
+        
+        $this->writeToXml($tagName, $this->author);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -755,22 +757,27 @@ class Podcast extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeType(): void {
-        $this->writeToXml('itunes:type', $this->type);
+        $tagName = $this->getItunesElementName('type');
+
+        $this->writeToXml($tagName, $this->type);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeContact(): void {
-        $data = [
-            'itunes:name'  => $this->contactName,
-            'itunes:email' => $this->contactEmail,
+        $tagName = $this->getItunesElementName('owner');
+        $data    = [
+            $this->getItunesElementName('name')  => $this->contactName,
+            $this->getItunesElementName('email') => $this->contactEmail,
         ];
 
-        $this->writeToXml('itunes:owner', $data);
+        $this->writeToXml($tagName, $data);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeImageUrl(): void {
-        $this->writeToXml('itunes:image', $this->imageUrl);
+        $tagName = $this->getItunesElementName('image');
+
+        $this->writeToXml($tagName, $this->imageUrl);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -813,27 +820,34 @@ class Podcast extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeExplicit(): void {
-        $data = $this->getExplicitValue();
+        $tagName = $this->getItunesElementName('explicit');
+        $data    = $this->getExplicitValue();
 
-        $this->writeToXml('itunes:explicit', $data);
+        $this->writeToXml($tagName, $data);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeNewFeedUrl(): void {
-        $this->writeToXml('itunes:new-feed-url', $this->newFeedUrl);
+        $tagName = $this->getItunesElementName('new-feed-url');
+
+        $this->writeToXml($tagName, $this->newFeedUrl);
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeShouldBeRemoved(): void {
         if ($this->shouldBeRemoved()) {
-            $this->writeToXml('itunes:block', 'Yes');
+            $tagName = $this->getItunesElementName('block');
+
+            $this->writeToXml($tagName, 'Yes');
         }
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeArchived(): void {
         if ($this->isArchived()) {
-            $this->writeToXml('itunes:complete', 'Yes');
+            $tagName = $this->getItunesElementName('complete');
+
+            $this->writeToXml($tagName, 'Yes');
         }
     }
 
