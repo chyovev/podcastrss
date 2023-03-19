@@ -185,7 +185,10 @@ class Episode extends AbstractParent
      * Initialize a regular (full) episode. This is the most common type.
      */
     public static function newFull() {
-        return new self(EpisodeType::FULL);
+        $episode = new self();
+        $episode->setType(EpisodeType::FULL);
+
+        return $episode;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -194,7 +197,10 @@ class Episode extends AbstractParent
      * of content that represent a preview of the podcast. 
      */
     public static function newTrailer() {
-        return new self(EpisodeType::TRAILER);
+        $episode = new self();
+        $episode->setType(EpisodeType::TRAILER);
+
+        return $episode;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -203,22 +209,12 @@ class Episode extends AbstractParent
      * content for another show) should be marked as Bonus type.
      */
     public static function newBonus() {
-        return new self(EpisodeType::BONUS);
+        $episode = new self();
+        $episode->setType(EpisodeType::BONUS);
+
+        return $episode;
     }
 
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * Since the constructor's visibility is set to protected,
-     * an Episode object can only be initialized using one of
-     * the three factory methods calling the constructor.
-     * Alternatively, potential extensions of the Episode class
-     * can bypass this behavior by declaring a public constructor.
-     * 
-     * @param string $type – type of episode
-     */
-    protected function __construct(string $type) {
-        $this->setType($type);
-    }
 
     ///////////////////////////////////////////////////////////////////////////
     public function getType(): ?string {
@@ -452,7 +448,12 @@ class Episode extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     public function markDescriptionAsHtml(): self {
-        $this->isDescriptionHtml = true;
+        return $this->setIsDescriptionHtml(true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setIsDescriptionHtml(bool $value): self {
+        $this->isDescriptionHtml = $value;
 
         return $this;
     }
@@ -533,11 +534,11 @@ class Episode extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     public function markAsExplicit(): self {
-        return $this->setExplicit(true);
+        return $this->setIsExplicit(true);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    public function setExplicit(bool $value): self {
+    public function setIsExplicit(bool $value): self {
         $this->isExplicit = $value;
 
         return $this;

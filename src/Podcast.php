@@ -75,10 +75,13 @@ class Podcast extends AbstractParent
      * Apple Podcasts recognizes only the first pair.
      * 
      * Structure (see addCategory() method):
-     *     ['Main Category' => ['Subcategory1', 'Subcategory2']]
+     *     [
+     *         0 => 'Main Category',
+     *         1 => ['Subcategory1', 'Subcategory2'],
+     *     ]
      * 
      * @see https://podcasters.apple.com/support/1691-apple-podcasts-categories
-     * @var string[]
+     * @var array
      */
     protected array $categories = [];
 
@@ -199,7 +202,10 @@ class Podcast extends AbstractParent
      * newest first.
      */
     public static function newEpisodic() {
-        return new self(PodcastType::EPISODIC);
+        $podcast = new self();
+        $podcast->setType(PodcastType::EPISODIC);
+
+        return $podcast;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -211,21 +217,10 @@ class Podcast extends AbstractParent
      * and $episodeNumber must be given for each episode.
      */
     public static function newSerial() {
-        return new self(PodcastType::SERIAL);
-    }
+        $podcast = new self();
+        $podcast->setType(PodcastType::SERIAL);
 
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * Since the constructor's visibility is set to protected,
-     * a Podcast object can only be initialized using one of
-     * the two factory methods calling the constructor.
-     * Alternatively, potential extensions of the Podcast class
-     * can bypass this behavior by declaring a public constructor.
-     * 
-     * @param string $type – type of podcast
-     */
-    protected function __construct(string $type) {
-        $this->setType($type);
+        return $podcast;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -305,7 +300,12 @@ class Podcast extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     public function markDescriptionAsHtml(): self {
-        $this->isDescriptionHtml = true;
+        return $this->setIsDescriptionHtml(true);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setIsDescriptionHtml(bool $value): self {
+        $this->isDescriptionHtml = $value;
 
         return $this;
     }
@@ -367,8 +367,45 @@ class Podcast extends AbstractParent
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    public function addCategory(string $category, array $subcategories = []): self {
-        $this->categories[$category] = $subcategories;
+    /**
+     * The categories parameter consists of string subarrays
+     * which should be passed to the addCategory() method as
+     * a variable-length argument list.
+     * 
+     * @throws InvalidArgumentException – missing main category (no/empty parameter)
+     * @param  string[] $categories
+     * @return self
+     */
+    public function setCategories(array $categories): self {
+        $this->categories = [];
+
+        foreach ($categories as $subcategories) {
+            $this->addCategory(...$subcategories);
+        }
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Add a category with a list of subcategories (if any).
+     * The first argument is always the main category,
+     * while all consecutive parameters are considered
+     * subcategories of said main category.
+     * 
+     * @throws InvalidArgumentException – missing main category (no/empty parameter)
+     * @param string[] $categories
+     */
+    public function addCategory(string ...$categories): self {
+        $this->filterEmptyValues($categories);
+
+        $mainCategory = array_shift($categories);
+
+        if (is_null($mainCategory)) {
+            throw new InvalidArgumentException('Method addCategory expects at least one main category.');
+        }
+
+        $this->categories[] = [$mainCategory, $categories];
 
         return $this;
     }
@@ -380,11 +417,11 @@ class Podcast extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     public function markAsExplicit(): self {
-        return $this->setExplicit(true);
+        return $this->setIsExplicit(true);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    public function setExplicit(bool $value): self {
+    public function setIsExplicit(bool $value): self {
         $this->isExplicit = $value;
 
         return $this;
@@ -623,11 +660,11 @@ class Podcast extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     public function markAsArchived(): self {
-        return $this->setArchived(true);
+        return $this->setIsArchived(true);
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    public function setArchived(bool $value): self {
+    public function setIsArchived(bool $value): self {
         $this->isArchived = $value;
 
         return $this;
@@ -784,8 +821,10 @@ class Podcast extends AbstractParent
     protected function serializeCategories(): void {
         $data = [];
 
-        foreach ($this->categories as $mainCategory => $subcategories) {
-            $data[] = $this->getCategorySerializationData($mainCategory, $subcategories);
+        // each categories element is an array: the first element
+        // is considered a main category, and the second: subcategories
+        foreach ($this->categories as $item) {
+            $data[] = $this->getCategorySerializationData($item[0], $item[1]);
         }
 
         $this->xmlWriter->write($data);
