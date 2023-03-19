@@ -22,17 +22,6 @@ class Episode extends AbstractParent
 {
 
     /**
-     * Title of the episode, required.
-     * The episode number and/or season should NOT be
-     * included in the title; instead, the respective
-     * properties should be used: $episodeNumber and
-     * $seasonNumber.
-     * 
-     * @var string
-     */
-    protected ?string $title = null;
-
-    /**
      * Filesize of the episode (in bytes), required.
      * 
      * @var int
@@ -75,70 +64,12 @@ class Episode extends AbstractParent
     protected ?DateTime $pubDate = null;
 
     /**
-     * The episode's description, max size is 4000 bytes (~3600 chars).
-     * Rich text formatting supported (<p>, <ol>, <ul>, <li>, <a>).
-     * If the description contains HTML tags,
-     * use setDescriptionHtml() instead of regular setter.
-     * Not required, but recommended.
-     * 
-     * @var string
-     */
-    protected ?string $description = null;
-
-    /**
-     * When the description has HTML tags, it should be
-     * wrapped in a CDATA tag during XML serialization.
-     * Set either together with the description via the
-     * setDescriptionHMTL() method, or individually
-     * by its setter: markDescriptionAsHtml().
-     * 
-     * @var bool
-     */
-    protected bool $isDescriptionHtml = false;
-
-    /**
      * Duration of the episode (in seconds).
      * Not required, but recommended.
      * 
      * @var int
      */
     protected ?int $duration = null;
-
-    /**
-     * A webpage corresponding with the episode (if any).
-     * Not to be confused with the episode's URL.
-     * Field is optional.
-     * 
-     * @var string
-     */
-    protected ?string $website = null;
-
-    /**
-     * Artwork of the episode, JPEG or PNG, 72 dpi, RGB colorspace. 
-     * Min size: 1400x1400 px, max size: 3000x3000 px.
-     * Field is optional.
-     * 
-     * @var string
-     */
-    protected ?string $imageUrl = null;
-
-    /**
-     * Whether the episode itself is explicit.
-     * Unlike the podcast $isExplicit property,
-     * the episode one is optional.
-     * 
-     * @var bool 
-     */
-    protected ?bool $isExplicit = null;
-
-    /**
-     * Whether a single episode from the podcast should
-     * be removed from the platforms, default value is false.
-     * Field is optional.
-     * 
-     * @var bool
-     */
-    protected bool $shouldBeRemoved = false;
 
     /**
      * NB! Used by Apple Podcasts only.
@@ -235,20 +166,6 @@ class Episode extends AbstractParent
         $this->validateIsOneOf($type, EpisodeType::getValidValues());
         
         $this->type = $type;
-
-        return $this;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function getTitle(): ?string {
-        return $this->title;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function setTitle(string $title): self {
-        $this->validateMaxLength($title);
-        
-        $this->title = $title;
 
         return $this;
     }
@@ -454,49 +371,6 @@ class Episode extends AbstractParent
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    public function getDescription(): ?string {
-        return $this->description;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * Descriptions containing HTML tags should be set using
-     * this method, otherwise they will be escaped during
-     * XML serialization.
-     */
-    public function setDescriptionHtml(string $description): self {
-        return $this
-            ->setDescription($description)
-            ->markDescriptionAsHtml();
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function setDescription(string $description): self {
-        $this->validateMaxLengthHTML($description);
-
-        $this->description = $description;
-
-        return $this;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function isDescriptionHtml(): bool {
-        return $this->isDescriptionHtml;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function markDescriptionAsHtml(): self {
-        return $this->setIsDescriptionHtml(true);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function setIsDescriptionHtml(bool $value): self {
-        $this->isDescriptionHtml = $value;
-
-        return $this;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
     public function getDuration(): ?int {
         return $this->duration;
     }
@@ -509,96 +383,6 @@ class Episode extends AbstractParent
         $this->validateIsPositive($duration);
 
         $this->duration = $duration;
-
-        return $this;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function getWebsite(): ?string {
-        return $this->website;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * @throws InvalidArgumentException – failed validation
-     */
-    public function setWebsite(string $website): self {
-        $this->validateUrl($website);
-
-        $this->website = $website;
-        
-        return $this;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function getImageUrl(): ?string {
-        return $this->imageUrl;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * @throws InvalidArgumentException – failed validation
-     */
-    public function setImageUrl(string $imageUrl): self {
-        $this->validateUrl($imageUrl);
-
-        $this->imageUrl = $imageUrl;
-
-        return $this;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * Get the boolean isExplicit() value as a string ('true' or 'false'),
-     * used for the XML serialization.
-     * 
-     * @return string
-     */
-    public function getExplicitValue(): string {
-        return var_export($this->isExplicit(), true);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * The $isExplicit property is optional for episodes
-     * which is why it's initial value is null.
-     * However, the return value is expected to be boolean
-     * which is incompatible with null values, hence the
-     * seemingly redundant comparison to true.
-     */
-    public function isExplicit(): bool {
-        return $this->isExplicit === true;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function markAsExplicit(): self {
-        return $this->setIsExplicit(true);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function setIsExplicit(bool $value): self {
-        $this->isExplicit = $value;
-
-        return $this;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function shouldBeRemoved(): bool {
-        return $this->shouldBeRemoved;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * Keep in mind that it may take some time for an episode marked
-     * for removal to actually be removed from the platforms it is on.
-     */
-    public function markForRemoval(): self {
-        return $this->setShouldBeRemoved(true);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    public function setShouldBeRemoved(bool $value): self {
-        $this->shouldBeRemoved = $value;
 
         return $this;
     }
@@ -677,23 +461,6 @@ class Episode extends AbstractParent
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    protected function serializeTitle(): void {
-        $this->writeToXml('title', $this->title);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    /**
-     * If the description was previously marked as HTML,
-     * it should be passed to the approparite serialization
-     * method which guarantees that HTML tags will be preserved.
-     */
-    protected function serializeDescription(): void {
-        $this->isDescriptionHtml
-            ? $this->writeHtmlToXml('description', $this->description)
-            : $this->writeToXml('description',     $this->description);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
     /**
      * The file element is a combination of 3 properties:
      *     - file size (in bytes)
@@ -730,28 +497,6 @@ class Episode extends AbstractParent
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    protected function serializeWebsite(): void {
-        $this->writeToXml('link', $this->website);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    protected function serializeImageUrl(): void {
-        $tagName = $this->getItunesElementName('image');
-        
-        $this->writeToXml($tagName, $this->imageUrl);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    protected function serializeExplicit(): void {
-        if ($this->isExplicit()) {
-            $tagName = $this->getItunesElementName('explicit');
-            $data    = $this->getExplicitValue();
-
-            $this->writeToXml($tagName, $data);
-        }
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
     protected function serializeEpisodeNumber(): void {
         $tagName = $this->getItunesElementName('episode');
 
@@ -770,15 +515,6 @@ class Episode extends AbstractParent
         $tagName = $this->getItunesElementName('episodeType');
 
         $this->writeToXml($tagName, $this->type);
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    protected function serializeShouldBeRemoved(): void {
-        if ($this->shouldBeRemoved()) {
-            $tagName = $this->getItunesElementName('block');
-
-            $this->writeToXml($tagName, 'Yes');
-        }
     }
 
 }
