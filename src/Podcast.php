@@ -696,6 +696,7 @@ class Podcast extends AbstractParent
     ///////////////////////////////////////////////////////////////////////////
     /**
      * Serialize a Podcast object to an RSS XML string.
+     * Elements with empty values will be automatically stripped.
      */
     protected function convertToXml(): void {
         $this->serializeTitle();
@@ -824,12 +825,16 @@ class Podcast extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeShouldBeRemoved(): void {
-        $this->writeToXml('itunes:block', 'Yes');
+        if ($this->shouldBeRemoved()) {
+            $this->writeToXml('itunes:block', 'Yes');
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
     protected function serializeArchived(): void {
-        $this->writeToXml('itunes:complete', 'Yes');
+        if ($this->isArchived()) {
+            $this->writeToXml('itunes:complete', 'Yes');
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////

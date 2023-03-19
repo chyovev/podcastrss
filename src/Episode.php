@@ -619,6 +619,7 @@ class Episode extends AbstractParent
     ///////////////////////////////////////////////////////////////////////////
     /**
      * Serialize an Episode object to an RSS XML string.
+     * Elements with empty values will be automatically stripped.
      */
     protected function convertToXml(): void {
         $this->serializeTitle();
