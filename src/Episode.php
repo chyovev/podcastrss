@@ -9,12 +9,17 @@ use TypeError;
 use PodcastRSS\Enum\EpisodeType;
 use PodcastRSS\Enum\ExtensionType;
 use PodcastRSS\Enum\MimeType;
-use PodcastRSS\Traits\Validation;
+
+/**
+ * Required elements:
+ *     - title
+ *     - fileSize
+ *     - mimeType
+ *     - episodeUrl
+ */
 
 class Episode extends AbstractParent
 {
-
-    use Validation;
 
     /**
      * Title of the episode, required.
@@ -35,7 +40,7 @@ class Episode extends AbstractParent
     protected ?int $fileSize = null;
     
     /**
-     * MIME type of the episode's file.
+     * MIME type of the episode's file, required.
      * 
      * @see \PodcastRSS\Enum\MimeType – all supported mime types
      * @var string
@@ -560,6 +565,19 @@ class Episode extends AbstractParent
     /* ===================================================================== */
     /*                       XML SERIALIZATION METHODS                       */
     /* ===================================================================== */
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Make sure that all required data is set before serializing it to XML.
+     * 
+     * @throws InvalidArgumentException
+     */
+    public function validateDataIntegrity(): void {
+        $this->validateHasValue('title',      $this->title);
+        $this->validateHasValue('fileSize',   $this->fileSize);
+        $this->validateHasValue('mimeType',   $this->mimeType);
+        $this->validateHasValue('episodeUrl', $this->episodeUrl);
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     /**

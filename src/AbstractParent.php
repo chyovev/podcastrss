@@ -3,10 +3,13 @@
 namespace PodcastRSS;
 
 use InvalidArgumentException;
+use PodcastRSS\Traits\Validation;
 use Sabre\Xml\Writer;
 use Sabre\Xml\XmlSerializable;
 
 abstract class AbstractParent implements XmlSerializable {
+
+    use Validation;
 
     /**
      * Instead of passing around the writer each time
@@ -38,10 +41,22 @@ abstract class AbstractParent implements XmlSerializable {
      * @return void
      */
     public function xmlSerialize(Writer $writer): void {
+        $this->validateDataIntegrity();
+
         $this->xmlWriter = $writer;
 
         $this->convertToXml();
     }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Make sure that all required data is set.
+     * If not, throw an exception.
+     * 
+     * @throws InvalidArgumentException – missing data
+     * @return void
+     */
+    abstract public function validateDataIntegrity(): void;
 
 
     ///////////////////////////////////////////////////////////////////////////

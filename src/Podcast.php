@@ -4,14 +4,21 @@ namespace PodcastRSS;
 
 use InvalidArgumentException;
 use PodcastRSS\Enum\PodcastType;
-use PodcastRSS\Traits\Validation;
 use Sabre\Xml\Service;
 use Sabre\Xml\Writer;
 
+/**
+ * Required elements:
+ *     - title
+ *     - description
+ *     - imageUrl
+ *     - language
+ *     - categories (at least one)
+ *     - episodes (at least one)
+ */
+
 class Podcast extends AbstractParent
 {
-
-    use Validation;
 
     /**
      * The podcast title, required.
@@ -635,6 +642,22 @@ class Podcast extends AbstractParent
 
     ///////////////////////////////////////////////////////////////////////////
     /**
+     * Make sure that all required data is set before serializing it to XML.
+     * 
+     * @throws InvalidArgumentException
+     */
+    public function validateDataIntegrity(): void {
+        $this->validateHasValue('title',       $this->title);
+        $this->validateHasValue('description', $this->description);
+        $this->validateHasValue('imageUrl',    $this->imageUrl);
+        $this->validateHasValue('language',    $this->language);
+
+        $this->validateArrayMinSize('categories', $this->categories, 1);
+        $this->validateArrayMinSize('episodes',   $this->episodes,   1);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
      * Serialize a Podcast object to an RSS XML string.
      */
     protected function convertToXml(): void {
@@ -725,7 +748,10 @@ class Podcast extends AbstractParent
      * 
      * Therefore, the subcategories serialization is carried
      * out by simply calling this same method recursively.
-     * @param array  $subcategories
+     * 
+     * @param  string $mainCategory
+     * @param  array  $subcategories
+     * @return array
      */
     protected function getCategorySerializationData(string $mainCategory, array $subcategories = []): array {
         $data = [

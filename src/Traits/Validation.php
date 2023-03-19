@@ -104,4 +104,45 @@ trait Validation
         }
     }
 
+
+    /* ===================================================================== */
+    /*                       XML SERIALIZATION METHODS                       */
+    /* ===================================================================== */
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Make sure a property has a non-null, non-empty value.
+     * 
+     * @throws InvalidArgumentException – missing value
+     * @param  string $properyName – name of the property, used for the exception
+     * @param  mixed  $value
+     * @return void
+     */
+    protected function validateHasValue(string $propertyName, mixed $value): void {
+        $isString = is_string($value);
+
+        // if value is an empty string, or not a string, but still equal to false
+        if (($isString && trim($value) === '') || ( ! $isString && ! $value)) {
+            throw new InvalidArgumentException("Missing value for {$propertyName}, cannot serialize.");
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Make sure an array has at least N elements.
+     * 
+     * @throws InvalidArgumentException – validation failed
+     * @param  string $properyName – name of the property, used for the exception
+     * @param  array  $array
+     * @param  int    $minSize
+     * @return void
+     */
+    protected function validateArrayMinSize(string $propertyName, array $array, int $minSize): void {
+        $size = count($array);
+
+        if ($size < $minSize) {
+            throw new InvalidArgumentException("Expected at least {$minSize} elements for {$propertyName}, got {$size} instead.");
+        }
+    }
+
 }
