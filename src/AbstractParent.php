@@ -4,6 +4,7 @@ namespace PodcastRSS;
 
 use InvalidArgumentException;
 use PodcastRSS\Traits\Validation;
+use Sabre\Xml\Element\Cdata;
 use Sabre\Xml\Writer;
 use Sabre\Xml\XmlSerializable;
 
@@ -66,6 +67,25 @@ abstract class AbstractParent implements XmlSerializable {
      */
     abstract protected function convertToXml(): void;
 
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * A shortcut element to add an HTML element to the XML being generated.
+     * HTML elements must be wrapped in CDATA, otherwise all tags will
+     * be escaped, i.e. converted to their ASCII representations,
+     * e.g. > would become &gt;
+     * 
+     * @param string $tagName
+     * @param mixed  $value
+     * @param array  $attributes
+     */
+    protected function writeHtmlToXml(string $tagName, mixed $value, array $attributes = []): void {
+        if ($value) {
+            $value = new Cdata($value);
+        }
+
+        $this->writeToXml($tagName, $value, $attributes);
+    }
 
     ///////////////////////////////////////////////////////////////////////////
     /**

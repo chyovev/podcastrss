@@ -31,12 +31,25 @@ class Podcast extends AbstractParent
      * One or more sentences describing the podcast, required.
      * Maximum amount of text allowed is 4000 bytes (~3600 chars).
      * Rich text formatting supported (<p>, <ol>, <ul>, <li>, <a>).
+     * If the description contains HTML tags,
+     * use setDescriptionHtml() instead of regular setter.
      * Optional for Google, but still recommended.
      * Required by Apple.
      * 
      * @var string
      */
     protected ?string $description = null;
+
+    /**
+     * When the description has HTML tags, it should be
+     * wrapped in a CDATA tag during XML serialization.
+     * Set either together with the description via the
+     * setDescriptionHMTL() method, or individually
+     * by its setter: markDescriptionAsHtml().
+     * 
+     * @var bool
+     */
+    protected bool $isDescriptionHtml = false;
 
     /**
      * Artwork of the podcast, required.
@@ -265,10 +278,34 @@ class Podcast extends AbstractParent
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Descriptions containing HTML tags should be set using
+     * this method, otherwise they will be escaped during
+     * XML serialization.
+     */
+    public function setDescriptionHtml(string $description): self {
+        return $this
+            ->setDescription($description)
+            ->markDescriptionAsHtml();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
     public function setDescription(string $description): self {
         $this->validateMaxLengthHTML($description);
 
         $this->description = $description;
+
+        return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function isDescriptionHtml(): bool {
+        return $this->isDescriptionHtml;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function markDescriptionAsHtml(): self {
+        $this->isDescriptionHtml = true;
 
         return $this;
     }
@@ -704,8 +741,15 @@ class Podcast extends AbstractParent
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    /**
+     * If the description was previously marked as HTML,
+     * it should be passed to the approparite serialization
+     * method which guarantees that HTML tags will be preserved.
+     */
     protected function serializeDescription(): void {
-        $this->writeToXml('description', $this->description);
+        $this->isDescriptionHtml
+            ? $this->writeHtmlToXml('description', $this->description)
+            : $this->writeToXml('description',     $this->description);
     }
 
     ///////////////////////////////////////////////////////////////////////////
