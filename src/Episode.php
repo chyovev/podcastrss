@@ -185,10 +185,7 @@ class Episode extends AbstractParent
      * Initialize a regular (full) episode. This is the most common type.
      */
     public static function newFull() {
-        $episode = new self();
-        $episode->setType(EpisodeType::FULL);
-
-        return $episode;
+        return (new self())->setTypeFull();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -197,10 +194,7 @@ class Episode extends AbstractParent
      * of content that represent a preview of the podcast. 
      */
     public static function newTrailer() {
-        $episode = new self();
-        $episode->setType(EpisodeType::TRAILER);
-
-        return $episode;
+        return (new self())->setTypeTrailer();
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -209,16 +203,28 @@ class Episode extends AbstractParent
      * content for another show) should be marked as Bonus type.
      */
     public static function newBonus() {
-        $episode = new self();
-        $episode->setType(EpisodeType::BONUS);
-
-        return $episode;
+        return (new self())->setTypeBonus();
     }
 
 
     ///////////////////////////////////////////////////////////////////////////
     public function getType(): ?string {
         return $this->type;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setTypeFull(): self {
+        return $this->setType(EpisodeType::FULL);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setTypeTrailer(): self {
+        return $this->setType(EpisodeType::TRAILER);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    public function setTypeBonus(): self {
+        return $this->setType(EpisodeType::BONUS);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -245,6 +251,38 @@ class Episode extends AbstractParent
         $this->title = $title;
 
         return $this;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Initialize an episode from a file in order to
+     * populate the fileSize and mimeType properties.
+     * 
+     * @param  string $filePath – path to file on local disk
+     * @return self
+     */
+    public static function fromFile(string $filePath): self {
+        return (new self())->setFromFile($filePath);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Each episode must have a file URL, size and MIME type.
+     * Each of these properties can be set individually via
+     * the respective setters, but this helper method can
+     * be also used to parse a *local* file in order to extract
+     * the file size and MIME type.
+     * 
+     * @param  string $filePath – path to file on local disk
+     * @return self
+     */
+    public function setFromFile(string $filePath): self {
+        $fileSize = @filesize($filePath);
+        $mimeType = @mime_content_type($filePath);
+
+        return $this
+            ->setFileSize($fileSize)
+            ->setMimeType($mimeType);
     }
 
     ///////////////////////////////////////////////////////////////////////////
