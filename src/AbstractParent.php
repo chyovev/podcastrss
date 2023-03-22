@@ -359,15 +359,32 @@ abstract class AbstractParent implements XmlSerializable {
     ///////////////////////////////////////////////////////////////////////////
     /**
      * A shortcut method to add an element to the XML being generated.
-     * Since some elements have just attributes, while others only
-     * values, both these parameters are optional.
-     * However, if both are missing, no empty tag should not be generated.
      * 
      * @param string $tagName
      * @param mixed  $value
      * @param array  $attributes
      */
     protected function writeToXml(string $tagName, mixed $value, array $attributes = []): void {
+        $data = $this->prepareXmlRecord($tagName, $value, $attributes);
+
+        $this->xmlWriter->write($data);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    /**
+     * Prepare an XML record to be written by the Writer.
+     * Since some elements have just attributes, while others
+     * only values, both these parameters are optional.
+     * However, if both are missing, an empty tag should not
+     * be generated, i.e. return an empty array which will
+     * be ignored by the writer.
+     * 
+     * @param  string $tagName
+     * @param  mixed  $value
+     * @param  array  $attributes
+     * @return array
+     */
+    protected function prepareXmlRecord(string $tagName, mixed $value, array $attributes = []): array {
         // cast all attributes to string since the underlying
         // XMLWriter::writeAttribute throws an exception if the
         // value is not a string (e.g. integer $fileSize of Episode)
@@ -380,14 +397,14 @@ abstract class AbstractParent implements XmlSerializable {
         }
         
         if ( ! ($value || $attributes)) {
-            return;
+            return [];
         }
 
-        $this->xmlWriter->write([
+        return [
             'name'       => $tagName,
             'attributes' => $attributes,
             'value'      => $value,
-        ]);
+        ];
     }
 
     ///////////////////////////////////////////////////////////////////////////

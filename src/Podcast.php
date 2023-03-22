@@ -644,16 +644,15 @@ class Podcast extends AbstractParent
      * @return array
      */
     protected function getCategorySerializationData(string $mainCategory, array $subcategories = []): array {
-        $data = [
-            'name'       => 'category',
-            'attributes' => ['text' => trim($mainCategory)],
-        ];
+        $tagName    = 'category';
+        $attributes = ['text' => trim($mainCategory)];
+        $value      = [];
 
         foreach ($subcategories as $item) {
-            $data['value'][] = $this->getCategorySerializationData($item);
+            $value[] = $this->getCategorySerializationData($item);
         }
 
-        return $data;
+        return $this->prepareXmlRecord($tagName, $value, $attributes);
     }
 
     ///////////////////////////////////////////////////////////////////////////
